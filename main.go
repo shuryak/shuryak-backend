@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/shuryak/shuryak-backend/internal"
+	"github.com/shuryak/shuryak-backend/internal/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"net/http"
@@ -13,32 +14,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type errorCode int
-
-const (
-	badRequest      errorCode = 0
-	internalError   errorCode = 1
-	badAuth         errorCode = 2
-	expiredAuthData errorCode = 3
-)
-
-type articleDTO struct {
-	Name        string      `json:"name"`
-	ArticleData interface{} `json:"article_data"`
-}
-
-type errorDTO struct {
-	ErrorCode errorCode `json:"error_code"`
-	Message   string    `json:"message"`
-}
-
 func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var article articleDTO
+
+	var article models.ArticleDTO
+
 	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
-		errorMessage := errorDTO{
-			ErrorCode: badRequest,
-			Message: "Bad request",
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.BadRequest,
+			Message:   "Bad request",
 		}
 		json.NewEncoder(w).Encode(errorMessage)
 		return
@@ -48,12 +32,11 @@ func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	insertResult, err := collection.InsertOne(context.TODO(), article)
 	if err != nil {
-		errorMessage := errorDTO{
-			ErrorCode: internalError,
-			Message: "Server error",
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.InternalError,
+			Message:   "Server error",
 		}
 		json.NewEncoder(w).Encode(errorMessage)
-		log.Fatal(err)
 	}
 
 	result := struct {
@@ -80,7 +63,11 @@ func main() {
 	}
 
 	router := mux.NewRouter()
+
+	// ROUTES:
 	router.HandleFunc("/api/articles.create", articleCreateHandler)
+	// END ROUTES
+
 	http.Handle("/", router)
 
 	internal.OpenMongo("mongodb://localhost:27017")
