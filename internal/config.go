@@ -9,13 +9,13 @@ import (
 var Configuration *ConfigType
 
 type ConfigType struct {
-	Debug ProfileType `json:"debug"`
-	Release ProfileType `json:"release"`
+	Debug *ProfileType `json:"debug"`
+	Release *ProfileType `json:"release"`
 }
 
 type ProfileType struct {
-	ServerPort string `json:"server_port"`
-	MongoConnectionString string `json:"mongo_connection_string"`
+	ServerPort *string `json:"server_port"`
+	MongoConnectionString *string `json:"mongo_connection_string"`
 }
 
 func init() {

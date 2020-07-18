@@ -10,9 +10,6 @@ import (
 	"log"
 	"net/http"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-
 	"github.com/gorilla/mux"
 )
 
@@ -35,42 +32,6 @@ type errorDTO struct {
 	Message   string    `json:"message"`
 }
 
-var mongoClient *mongo.Client
-
-func openMongo(address string) *mongo.Client {
-	// Initializing MongoDB Client
-	client, err := mongo.NewClient(options.Client().ApplyURI(address))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create connect
-	err = client.Connect(context.TODO())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Successfully connected to " + address + "!")
-
-	return client
-}
-
-func closeMongo(client *mongo.Client) {
-	err := client.Disconnect(context.TODO())
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Successfully disconnected!")
-}
-
 func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var article articleDTO
@@ -83,7 +44,7 @@ func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	collection := mongoClient.Database("shuryakDb").Collection("articles")
+	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
 
 	insertResult, err := collection.InsertOne(context.TODO(), article)
 	if err != nil {
@@ -108,7 +69,7 @@ func main() {
 	profile := flag.String("profile", "debug", "Configuration profile selection")
 	flag.Parse()
 
-	var config internal.ProfileType
+	var config *internal.ProfileType
 
 	if *profile == "debug" {
 		config = internal.Configuration.Debug
@@ -122,11 +83,11 @@ func main() {
 	router.HandleFunc("/api/articles.create", articleCreateHandler)
 	http.Handle("/", router)
 
-	mongoClient = openMongo("mongodb://localhost:27017")
-	defer closeMongo(mongoClient)
+	internal.OpenMongo("mongodb://localhost:27017")
+	defer internal.CloseMongo()
 
-	fmt.Println("Server is running at", config.ServerPort, "port!")
-	err := http.ListenAndServe(":" + config.ServerPort, nil)
+	fmt.Println("Server is running on", *config.ServerPort, "port!")
+	err := http.ListenAndServe(":" + *config.ServerPort, nil)
 	if err != nil {
 		log.Fatal("Internal error!")
 	}
