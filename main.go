@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
+	"github.com/shuryak/shuryak-backend/internal"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"net/http"
@@ -54,7 +56,7 @@ func openMongo(address string) *mongo.Client {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Successfully connected to", address, "!")
+	fmt.Println("Successfully connected to " + address + "!")
 
 	return client
 }
@@ -103,14 +105,29 @@ func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	profile := flag.String("profile", "debug", "Configuration profile selection")
+	flag.Parse()
+
+	var config internal.ProfileType
+
+	if *profile == "debug" {
+		config = internal.Configuration.Debug
+	} else if *profile == "release" {
+		config = internal.Configuration.Release
+	} else {
+		log.Fatal("Bad profile!")
+	}
+
 	router := mux.NewRouter()
 	router.HandleFunc("/api/articles.create", articleCreateHandler)
 	http.Handle("/", router)
 
-	fmt.Println("Server is listening...")
-
 	mongoClient = openMongo("mongodb://localhost:27017")
 	defer closeMongo(mongoClient)
 
-	http.ListenAndServe(":8181", nil)
+	fmt.Println("Server is running at", config.ServerPort, "port!")
+	err := http.ListenAndServe(":" + config.ServerPort, nil)
+	if err != nil {
+		log.Fatal("Internal error!")
+	}
 }
