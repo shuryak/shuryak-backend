@@ -13,3 +13,7 @@ type ErrorDTO struct {
 	ErrorCode ErrorCode `json:"error_code"`
 	Message   string    `json:"message"`
 }
+
+type FindExpression struct {
+	Query string `json:"query"`
+}
