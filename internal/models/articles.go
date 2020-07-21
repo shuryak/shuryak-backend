@@ -1,4 +1,4 @@
-package  models
+package models
 
 type ArticleDTO struct {
 	Name        string      `json:"name"`

@@ -9,12 +9,12 @@ import (
 var Configuration *ConfigType
 
 type ConfigType struct {
-	Debug *ProfileType `json:"debug"`
+	Debug   *ProfileType `json:"debug"`
 	Release *ProfileType `json:"release"`
 }
 
 type ProfileType struct {
-	ServerPort *string `json:"server_port"`
+	ServerPort            *string `json:"server_port"`
 	MongoConnectionString *string `json:"mongo_connection_string"`
 }
 

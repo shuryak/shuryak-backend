@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/shuryak/shuryak-backend/internal"
+	"github.com/shuryak/shuryak-backend/internal/middleware"
 	"github.com/shuryak/shuryak-backend/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,8 +17,6 @@ import (
 )
 
 func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	var article models.ArticleDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
@@ -42,7 +41,7 @@ func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := struct {
 		ArticleId primitive.ObjectID `json:"article_id"`
-	} {
+	}{
 		insertResult.InsertedID.(primitive.ObjectID),
 	}
 
@@ -72,8 +71,7 @@ func articleFindOneHandler(w http.ResponseWriter, r *http.Request) {
 	err := collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
 		emptyResult := struct {
-
-		} {}
+		}{}
 		json.NewEncoder(w).Encode(emptyResult)
 		return
 	}
@@ -82,8 +80,6 @@ func articleFindOneHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func userCreateHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	var dto models.UserRegisterDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
@@ -135,6 +131,67 @@ func userCreateHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(insertResult)
 }
 
+func userLoginHandler(w http.ResponseWriter, r *http.Request) {
+	var dto models.UserLoginDTO
+
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.BadRequest,
+			Message:   "Bad request",
+		}
+		json.NewEncoder(w).Encode(errorMessage)
+		return
+	}
+
+	var dbUser models.User
+	collection := internal.Mongo.Database("shuryakDb").Collection("users")
+	findFilter := bson.D{{"nickname", dto.Nickname}}
+	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbUser); err != nil {
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.BadAuth,
+			Message:   "User with this nickname or password is not registered",
+		}
+		json.NewEncoder(w).Encode(errorMessage)
+		return
+	}
+
+	if internal.CheckPasswordHash(dto.Password, dbUser.PasswordHash) == false {
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.BadAuth,
+			Message:   "User with this nickname or password is not registered",
+		}
+		json.NewEncoder(w).Encode(errorMessage)
+		return
+	}
+
+	accessToken, expiresIn, err := internal.GenerateJWT(dbUser.FirstName, dbUser.LastName, dbUser.Nickname, 30)
+	if err != nil {
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.InternalError,
+			Message:   "Internal error",
+		}
+		json.NewEncoder(w).Encode(errorMessage)
+		return
+	}
+
+	json.NewEncoder(w).Encode(models.Token{
+		AccessToken: accessToken,
+		ExpiresIn:   expiresIn,
+	})
+}
+
+func handleRequests() {
+	router := mux.NewRouter()
+
+	router.Use(middleware.HeadersMiddleware)
+	router.HandleFunc("/api/articles.create", middleware.IsAuthMiddleware(articleCreateHandler))
+	router.HandleFunc("/api/articles.findOne", articleFindOneHandler)
+	router.HandleFunc("/api/users.register", userCreateHandler)
+	router.HandleFunc("/api/users.login", userLoginHandler)
+
+	http.Handle("/", router)
+}
+
 func main() {
 	profile := flag.String("profile", "debug", "Configuration profile selection")
 	flag.Parse()
@@ -149,21 +206,13 @@ func main() {
 		log.Fatal("Bad profile!")
 	}
 
-	router := mux.NewRouter()
+	handleRequests()
 
 	internal.OpenMongo("mongodb://localhost:27017")
 	defer internal.CloseMongo()
 
-	// ROUTES:
-	router.HandleFunc("/api/articles.create", articleCreateHandler)
-	router.HandleFunc("/api/articles.findOne", articleFindOneHandler)
-	router.HandleFunc("/api/users.register", userCreateHandler)
-	// END ROUTES
-
-	http.Handle("/", router)
-
 	fmt.Println("Server is running on", *config.ServerPort, "port!")
-	err := http.ListenAndServe(":" + *config.ServerPort, nil)
+	err := http.ListenAndServe(":"+*config.ServerPort, nil)
 	if err != nil {
 		log.Fatal("Internal error!")
 	}
