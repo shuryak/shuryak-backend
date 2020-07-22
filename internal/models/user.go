@@ -55,7 +55,7 @@ func (dto UserRegisterDTO) CheckFieldsLength() bool {
 	return true
 }
 
-func (dto UserRegisterDTO) DTOtoUser(isAdmin bool) *User {
+func (dto UserRegisterDTO) ToUser(isAdmin bool) *User {
 	passwordHash, _ := internal.HashPassword(dto.Password)
 
 	return &User{
@@ -65,4 +65,8 @@ func (dto UserRegisterDTO) DTOtoUser(isAdmin bool) *User {
 		isAdmin,
 		passwordHash,
 	}
+}
+
+func (user User) GenerateJWTBasedOn(minutes uint) (string, int64, error) {
+	return internal.GenerateJWT(user.FirstName, user.LastName, user.Nickname, minutes)
 }

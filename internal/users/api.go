@@ -44,7 +44,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := dto.DTOtoUser(false)
+	user := dto.ToUser(false)
 
 	collection = internal.Mongo.Database("shuryakDb").Collection("users")
 
@@ -94,7 +94,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, expiresIn, err := internal.GenerateJWT(dbUser.FirstName, dbUser.LastName, dbUser.Nickname, 30)
+	accessToken, expiresIn, err := dbUser.GenerateJWTBasedOn(30)
 	if err != nil {
 		errorMessage := models.ErrorDTO{
 			ErrorCode: models.InternalError,
