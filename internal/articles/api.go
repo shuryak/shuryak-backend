@@ -60,7 +60,7 @@ func FindOneHandler(w http.ResponseWriter, r *http.Request) {
 
 	filter := bson.D{{"name", bson.M{"$regex": query.Query, "$options": "im"}}}
 
-	var result models.ArticleDTO
+	var result models.MetaArticle
 
 	err := collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
