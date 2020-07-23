@@ -13,9 +13,9 @@ import (
 )
 
 func CreateHandler(w http.ResponseWriter, r *http.Request) {
-	var article models.ArticleDTO
+	var dto models.ArticleDTO
 
-	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		errorMessage := models.ErrorDTO{
 			ErrorCode: models.BadRequest,
 			Message:   "Bad request",
@@ -26,7 +26,18 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
 
-	insertResult, err := collection.InsertOne(context.TODO(), article)
+	var dbArticle models.User
+	findFilter := bson.D{{"name", dto.Name}}
+	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.NotUniqueData,
+			Message:   "Article with this name already exists",
+		}
+		json.NewEncoder(w).Encode(errorMessage)
+		return
+	}
+
+	insertResult, err := collection.InsertOne(context.TODO(), dto)
 	if err != nil {
 		errorMessage := models.ErrorDTO{
 			ErrorCode: models.InternalError,
@@ -35,10 +46,9 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(errorMessage)
 	}
 
-	result := struct {
-		ArticleId primitive.ObjectID `json:"article_id"`
-	}{
-		insertResult.InsertedID.(primitive.ObjectID),
+	result := models.MetaArticle{
+		Id:   insertResult.InsertedID.(primitive.ObjectID),
+		Name: dto.Name,
 	}
 
 	json.NewEncoder(w).Encode(result)
