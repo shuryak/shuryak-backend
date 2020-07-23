@@ -18,6 +18,12 @@ type ErrorDTO struct {
 	Message   string    `json:"message"`
 }
 
-type FindExpression struct {
+type FindOneExpression struct {
 	Query string `json:"query"`
+}
+
+type FindManyExpression struct {
+	Query  string `json:"query"`
+	Count  uint   `json:"count"`
+	Offset uint   `json:"offset"`
 }

@@ -19,6 +19,7 @@ func handleRequests() {
 	router.Use(middleware.HeadersMiddleware)
 	router.HandleFunc("/api/articles.create", middleware.IsAuthMiddleware(articles.CreateHandler))
 	router.HandleFunc("/api/articles.findOne", articles.FindOneHandler)
+	router.HandleFunc("/api/articles.findMany", articles.FindManyHandler)
 	router.HandleFunc("/api/users.register", users.CreateHandler)
 	router.HandleFunc("/api/users.login", users.LoginHandler)
 
