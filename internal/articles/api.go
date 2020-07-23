@@ -26,6 +26,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
 
+	// Checking for the existence of an article with this name
 	var dbArticle models.User
 	findFilter := bson.D{{"name", dto.Name}}
 	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
@@ -134,4 +135,35 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 	cur.Close(context.TODO())
 
 	json.NewEncoder(w).Encode(results)
+}
+
+func GetByIdHandler(w http.ResponseWriter, r *http.Request) {
+	var dto models.ArticleIdDTO
+
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.BadRequest,
+			Message:   "Bad request",
+		}
+		json.NewEncoder(w).Encode(errorMessage)
+		return
+	}
+
+	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
+
+	filter := bson.D{{"_id", dto.Id}}
+
+	var result models.ArticleDTO
+
+	err := collection.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		errorMessage := models.ErrorDTO{
+			ErrorCode: models.BadRequest,
+			Message:   "Article with this id doesn't exist",
+		}
+		json.NewEncoder(w).Encode(errorMessage)
+		return
+	}
+
+	json.NewEncoder(w).Encode(result)
 }

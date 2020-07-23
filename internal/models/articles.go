@@ -7,6 +7,10 @@ type MetaArticle struct {
 	Name string             `json:"name"`
 }
 
+type ArticleIdDTO struct {
+	Id primitive.ObjectID `json:"article_id"`
+}
+
 type ArticleDTO struct {
 	Name        string      `json:"name"`
 	ArticleData interface{} `json:"article_data"`
