@@ -21,6 +21,7 @@ func handleRequests() {
 	router.HandleFunc("/api/articles.findOne", articles.FindOneHandler)
 	router.HandleFunc("/api/articles.findMany", articles.FindManyHandler)
 	router.HandleFunc("/api/articles.getById", articles.GetByIdHandler)
+	router.HandleFunc("/api/articles.getList", articles.GetListHandler)
 	router.HandleFunc("/api/users.register", users.CreateHandler)
 	router.HandleFunc("/api/users.login", users.LoginHandler)
 

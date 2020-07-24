@@ -27,3 +27,8 @@ type FindManyExpression struct {
 	Count  uint   `json:"count"`
 	Offset uint   `json:"offset"`
 }
+
+type GetListExpression struct {
+	Count  uint `json:"count"`
+	Offset uint `json:"offset"`
+}
