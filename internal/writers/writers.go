@@ -1,4 +1,4 @@
-package internal
+package writers
 
 import (
 	"encoding/json"
@@ -37,5 +37,11 @@ func ErrorWriter(w *http.ResponseWriter, errorCode models.ErrorCode, description
 		Message:   description,
 	}
 	json.NewEncoder(*w).Encode(errorMessage)
-	return
+}
+
+func EmptyResultWriter(w *http.ResponseWriter) {
+	(*w).WriteHeader(http.StatusOK)
+
+	json.NewEncoder(*w).Encode(struct {
+	}{})
 }

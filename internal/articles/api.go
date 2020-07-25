@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"github.com/shuryak/shuryak-backend/internal"
 	"github.com/shuryak/shuryak-backend/internal/models"
+	"github.com/shuryak/shuryak-backend/internal/writers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 	"net/http"
 )
 
@@ -16,11 +16,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 	var dto models.ArticleDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		errorMessage := models.ErrorDTO{
-			ErrorCode: models.BadRequest,
-			Message:   "Bad request",
-		}
-		json.NewEncoder(w).Encode(errorMessage)
+		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
@@ -30,21 +26,14 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 	var dbArticle models.User
 	findFilter := bson.D{{"name", dto.Name}}
 	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
-		errorMessage := models.ErrorDTO{
-			ErrorCode: models.NotUniqueData,
-			Message:   "Article with this name already exists",
-		}
-		json.NewEncoder(w).Encode(errorMessage)
+		writers.ErrorWriter(&w, models.NotUniqueData, "Article with this name already exists")
 		return
 	}
 
 	insertResult, err := collection.InsertOne(context.TODO(), dto)
 	if err != nil {
-		errorMessage := models.ErrorDTO{
-			ErrorCode: models.InternalError,
-			Message:   "Internal error",
-		}
-		json.NewEncoder(w).Encode(errorMessage)
+		writers.ErrorWriter(&w, models.InternalError, "Internal error")
+		return
 	}
 
 	result := models.MetaArticle{
@@ -59,11 +48,7 @@ func FindOneHandler(w http.ResponseWriter, r *http.Request) {
 	var query models.FindOneExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
-		errorMessage := models.ErrorDTO{
-			ErrorCode: models.BadRequest,
-			Message:   "Bad request",
-		}
-		json.NewEncoder(w).Encode(errorMessage)
+		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
@@ -75,9 +60,7 @@ func FindOneHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
-		emptyResult := struct {
-		}{}
-		json.NewEncoder(w).Encode(emptyResult)
+		writers.EmptyResultWriter(&w)
 		return
 	}
 
@@ -88,11 +71,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 	var query models.FindManyExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
-		errorMessage := models.ErrorDTO{
-			ErrorCode: models.BadRequest,
-			Message:   "Bad request",
-		}
-		json.NewEncoder(w).Encode(errorMessage)
+		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
@@ -105,9 +84,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 
 	cur, err := collection.Find(context.TODO(), filter, options)
 	if err != nil {
-		emptyResult := struct {
-		}{}
-		json.NewEncoder(w).Encode(emptyResult)
+		writers.EmptyResultWriter(&w)
 		return
 	}
 
@@ -117,11 +94,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 		var document models.MetaArticle
 		err := cur.Decode(&document)
 		if err != nil {
-			errorMessage := models.ErrorDTO{
-				ErrorCode: models.InternalError,
-				Message:   "Internal error",
-			}
-			json.NewEncoder(w).Encode(errorMessage)
+			writers.ErrorWriter(&w, models.InternalError, "Internal error")
 			return
 		}
 
@@ -129,7 +102,8 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		log.Fatal(err)
+		writers.ErrorWriter(&w, models.InternalError, "Internal error")
+		return
 	}
 
 	cur.Close(context.TODO())
@@ -141,11 +115,7 @@ func GetByIdHandler(w http.ResponseWriter, r *http.Request) {
 	var dto models.ArticleIdDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		errorMessage := models.ErrorDTO{
-			ErrorCode: models.BadRequest,
-			Message:   "Bad request",
-		}
-		json.NewEncoder(w).Encode(errorMessage)
+		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
@@ -157,11 +127,7 @@ func GetByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
-		errorMessage := models.ErrorDTO{
-			ErrorCode: models.BadRequest,
-			Message:   "Article with this id doesn't exist",
-		}
-		json.NewEncoder(w).Encode(errorMessage)
+		writers.ErrorWriter(&w, models.BadRequest, "Article with this id doesn't exist")
 		return
 	}
 
@@ -172,11 +138,7 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 	var query models.GetListExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
-		errorMessage := models.ErrorDTO{
-			ErrorCode: models.BadRequest,
-			Message:   "Bad request",
-		}
-		json.NewEncoder(w).Encode(errorMessage)
+		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
@@ -188,9 +150,7 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 
 	cur, err := collection.Find(context.TODO(), bson.D{}, options)
 	if err != nil {
-		emptyResult := struct {
-		}{}
-		json.NewEncoder(w).Encode(emptyResult)
+		writers.EmptyResultWriter(&w)
 		return
 	}
 
@@ -200,11 +160,7 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 		var document models.MetaArticle
 		err := cur.Decode(&document)
 		if err != nil {
-			errorMessage := models.ErrorDTO{
-				ErrorCode: models.InternalError,
-				Message:   "Internal error",
-			}
-			json.NewEncoder(w).Encode(errorMessage)
+			writers.ErrorWriter(&w, models.InternalError, "Internal error")
 			return
 		}
 
@@ -212,7 +168,8 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		log.Fatal(err)
+		writers.ErrorWriter(&w, models.InternalError, "Internal error")
+		return
 	}
 
 	cur.Close(context.TODO())
