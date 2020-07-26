@@ -30,15 +30,17 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	insertResult, err := collection.InsertOne(context.TODO(), dto)
+	insertResult, err := collection.InsertOne(context.TODO(), dto.ToArticle())
 	if err != nil {
 		writers.ErrorWriter(&w, models.InternalError, "Internal error")
 		return
 	}
 
 	result := models.MetaArticle{
-		Id:   insertResult.InsertedID.(primitive.ObjectID),
-		Name: dto.Name,
+		Id:        insertResult.InsertedID.(primitive.ObjectID),
+		Name:      dto.Name,
+		IsDraft:   dto.IsDraft,
+		Thumbnail: dto.Thumbnail,
 	}
 
 	json.NewEncoder(w).Encode(result)
