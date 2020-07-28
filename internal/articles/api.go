@@ -7,7 +7,6 @@ import (
 	"github.com/shuryak/shuryak-backend/internal/models"
 	"github.com/shuryak/shuryak-backend/internal/writers"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
 )
@@ -24,20 +23,25 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Checking for the existence of an article with this name
 	var dbArticle models.User
-	findFilter := bson.D{{"name", dto.Name}}
+	findFilter := bson.D{{"custom_id", dto.CustomId}}
+	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
+		writers.ErrorWriter(&w, models.NotUniqueData, "Article with this id already exists")
+		return
+	}
+	findFilter = bson.D{{"name", dto.Name}}
 	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
 		writers.ErrorWriter(&w, models.NotUniqueData, "Article with this name already exists")
 		return
 	}
 
-	insertResult, err := collection.InsertOne(context.TODO(), dto.ToArticle())
+	_, err := collection.InsertOne(context.TODO(), dto.ToArticle())
 	if err != nil {
 		writers.ErrorWriter(&w, models.InternalError, "Internal error")
 		return
 	}
 
 	result := models.MetaArticle{
-		Id:        insertResult.InsertedID.(primitive.ObjectID),
+		Id:        dto.CustomId,
 		Name:      dto.Name,
 		IsDraft:   dto.IsDraft,
 		Thumbnail: dto.Thumbnail,
@@ -113,8 +117,8 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-func GetByIdHandler(w http.ResponseWriter, r *http.Request) {
-	var dto models.ArticleIdDTO
+func GetByCustomIdHandler(w http.ResponseWriter, r *http.Request) {
+	var dto models.ArticleCustomIdDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
@@ -123,7 +127,7 @@ func GetByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
 
-	filter := bson.D{{"_id", dto.Id}}
+	filter := bson.D{{"custom_id", dto.CustomId}}
 
 	var result models.ArticleDTO
 
@@ -137,6 +141,10 @@ func GetByIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetListHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 	var query models.GetListExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {

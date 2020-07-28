@@ -11,21 +11,24 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
-func handleRequests() {
+func handleRequests() http.Handler {
 	router := mux.NewRouter()
 
 	router.Use(middleware.HeadersMiddleware)
 	router.HandleFunc("/api/articles.create", middleware.IsAuthMiddleware(articles.CreateHandler))
 	router.HandleFunc("/api/articles.findOne", articles.FindOneHandler)
 	router.HandleFunc("/api/articles.findMany", articles.FindManyHandler)
-	router.HandleFunc("/api/articles.getById", articles.GetByIdHandler)
+	router.HandleFunc("/api/articles.getById", articles.GetByCustomIdHandler)
 	router.HandleFunc("/api/articles.getList", articles.GetListHandler)
 	router.HandleFunc("/api/users.register", users.CreateHandler)
 	router.HandleFunc("/api/users.login", users.LoginHandler)
 
 	http.Handle("/", router)
+
+	return cors.Default().Handler(router)
 }
 
 func main() {
@@ -42,13 +45,11 @@ func main() {
 		log.Fatal("Bad profile!")
 	}
 
-	handleRequests()
-
 	internal.OpenMongo("mongodb://localhost:27017")
 	defer internal.CloseMongo()
 
 	fmt.Println("Server is running on", *config.ServerPort, "port!")
-	err := http.ListenAndServe(":"+*config.ServerPort, nil)
+	err := http.ListenAndServe(":"+*config.ServerPort, handleRequests())
 	if err != nil {
 		log.Fatal("Internal error!")
 	}
