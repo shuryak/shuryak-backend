@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/shuryak/shuryak-backend/internal"
-	"github.com/shuryak/shuryak-backend/internal/articles"
+	"github.com/shuryak/shuryak-backend/internal/handlers/articles"
+	"github.com/shuryak/shuryak-backend/internal/handlers/users"
 	"github.com/shuryak/shuryak-backend/internal/middleware"
-	"github.com/shuryak/shuryak-backend/internal/users"
+	"github.com/shuryak/shuryak-backend/internal/utils"
 	"log"
 	"net/http"
 
@@ -35,18 +35,18 @@ func main() {
 	profile := flag.String("profile", "debug", "Configuration profile selection")
 	flag.Parse()
 
-	var config *internal.ProfileType
+	var config *utils.ProfileType
 
 	if *profile == "debug" {
-		config = internal.Configuration.Debug
+		config = utils.Configuration.Debug
 	} else if *profile == "release" {
-		config = internal.Configuration.Release
+		config = utils.Configuration.Release
 	} else {
 		log.Fatal("Bad profile!")
 	}
 
-	internal.OpenMongo("mongodb://localhost:27017")
-	defer internal.CloseMongo()
+	utils.OpenMongo("mongodb://localhost:27017")
+	defer utils.CloseMongo()
 
 	fmt.Println("Server is running on", *config.ServerPort, "port!")
 	err := http.ListenAndServe(":"+*config.ServerPort, handleRequests())

@@ -3,9 +3,9 @@ package articles
 import (
 	"context"
 	"encoding/json"
-	"github.com/shuryak/shuryak-backend/internal"
 	"github.com/shuryak/shuryak-backend/internal/models"
-	"github.com/shuryak/shuryak-backend/internal/writers"
+	"github.com/shuryak/shuryak-backend/internal/utils"
+	"github.com/shuryak/shuryak-backend/internal/utils/http-result"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
@@ -15,28 +15,28 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 	var dto models.ArticleDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
-	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
+	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
 	// Checking for the existence of an article with this name
 	var dbArticle models.User
 	findFilter := bson.D{{"custom_id", dto.CustomId}}
 	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
-		writers.ErrorWriter(&w, models.NotUniqueData, "Article with this id already exists")
+		http_result.WriteError(&w, models.NotUniqueData, "Article with this id already exists")
 		return
 	}
 	findFilter = bson.D{{"name", dto.Name}}
 	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
-		writers.ErrorWriter(&w, models.NotUniqueData, "Article with this name already exists")
+		http_result.WriteError(&w, models.NotUniqueData, "Article with this name already exists")
 		return
 	}
 
 	_, err := collection.InsertOne(context.TODO(), dto.ToArticle())
 	if err != nil {
-		writers.ErrorWriter(&w, models.InternalError, "Internal error")
+		http_result.WriteError(&w, models.InternalError, "Internal error")
 		return
 	}
 
@@ -54,11 +54,11 @@ func FindOneHandler(w http.ResponseWriter, r *http.Request) {
 	var query models.FindOneExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
-		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
-	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
+	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
 	filter := bson.D{{"name", bson.M{"$regex": query.Query, "$options": "im"}}}
 
@@ -66,7 +66,7 @@ func FindOneHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
-		writers.EmptyResultWriter(&w)
+		http_result.WriteEmpty(&w)
 		return
 	}
 
@@ -77,11 +77,11 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 	var query models.FindManyExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
-		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
-	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
+	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
 	options := options.Find()
 	options.SetLimit(int64(query.Count))
@@ -90,7 +90,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 
 	cur, err := collection.Find(context.TODO(), filter, options)
 	if err != nil {
-		writers.EmptyResultWriter(&w)
+		http_result.WriteEmpty(&w)
 		return
 	}
 
@@ -100,7 +100,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 		var document models.MetaArticle
 		err := cur.Decode(&document)
 		if err != nil {
-			writers.ErrorWriter(&w, models.InternalError, "Internal error")
+			http_result.WriteError(&w, models.InternalError, "Internal error")
 			return
 		}
 
@@ -108,7 +108,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		writers.ErrorWriter(&w, models.InternalError, "Internal error")
+		http_result.WriteError(&w, models.InternalError, "Internal error")
 		return
 	}
 
@@ -121,11 +121,11 @@ func GetByCustomIdHandler(w http.ResponseWriter, r *http.Request) {
 	var dto models.ArticleCustomIdDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
-	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
+	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
 	filter := bson.D{{"custom_id", dto.CustomId}}
 
@@ -133,7 +133,7 @@ func GetByCustomIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
-		writers.ErrorWriter(&w, models.BadRequest, "Article with this id doesn't exist")
+		http_result.WriteError(&w, models.BadRequest, "Article with this id doesn't exist")
 		return
 	}
 
@@ -148,11 +148,11 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 	var query models.GetListExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
-		writers.ErrorWriter(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
 
-	collection := internal.Mongo.Database("shuryakDb").Collection("articles")
+	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
 	options := options.Find()
 	options.SetLimit(int64(query.Count))
@@ -160,7 +160,7 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 
 	cur, err := collection.Find(context.TODO(), bson.D{}, options)
 	if err != nil {
-		writers.EmptyResultWriter(&w)
+		http_result.WriteEmpty(&w)
 		return
 	}
 
@@ -170,7 +170,7 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 		var document models.MetaArticle
 		err := cur.Decode(&document)
 		if err != nil {
-			writers.ErrorWriter(&w, models.InternalError, "Internal error")
+			http_result.WriteError(&w, models.InternalError, "Internal error")
 			return
 		}
 
@@ -178,7 +178,7 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		writers.ErrorWriter(&w, models.InternalError, "Internal error")
+		http_result.WriteError(&w, models.InternalError, "Internal error")
 		return
 	}
 

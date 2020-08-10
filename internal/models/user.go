@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/shuryak/shuryak-backend/internal"
+	"github.com/shuryak/shuryak-backend/internal/utils"
 )
 
 type User struct {
@@ -56,7 +56,7 @@ func (dto UserRegisterDTO) CheckFieldsLength() bool {
 }
 
 func (dto UserRegisterDTO) ToUser(isAdmin bool) *User {
-	passwordHash, _ := internal.HashPassword(dto.Password)
+	passwordHash, _ := utils.HashPassword(dto.Password)
 
 	return &User{
 		dto.FirstName,
@@ -68,5 +68,5 @@ func (dto UserRegisterDTO) ToUser(isAdmin bool) *User {
 }
 
 func (user User) GenerateJWTBasedOn(minutes uint) (string, int64, error) {
-	return internal.GenerateJWT(user.FirstName, user.LastName, user.Nickname, minutes)
+	return utils.GenerateJWT(user.FirstName, user.LastName, user.Nickname, minutes)
 }

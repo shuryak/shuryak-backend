@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/shuryak/shuryak-backend/internal"
 	"github.com/shuryak/shuryak-backend/internal/models"
+	"github.com/shuryak/shuryak-backend/internal/utils"
 	"net/http"
 	"strings"
 )
@@ -37,7 +37,7 @@ func IsAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("there was an error")
 			}
-			return internal.SigningKey, nil
+			return utils.SigningKey, nil
 		})
 
 		if err != nil {

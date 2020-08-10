@@ -1,4 +1,4 @@
-package writers
+package http_result
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func ErrorWriter(w *http.ResponseWriter, errorCode models.ErrorCode, description string) {
+func WriteError(w *http.ResponseWriter, errorCode models.ErrorCode, description string) {
 	var httpStatusCode int
 
 	switch errorCode {
@@ -39,7 +39,7 @@ func ErrorWriter(w *http.ResponseWriter, errorCode models.ErrorCode, description
 	json.NewEncoder(*w).Encode(errorMessage)
 }
 
-func EmptyResultWriter(w *http.ResponseWriter) {
+func WriteEmpty(w *http.ResponseWriter) {
 	(*w).WriteHeader(http.StatusOK)
 
 	json.NewEncoder(*w).Encode(struct {
