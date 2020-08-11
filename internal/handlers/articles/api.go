@@ -7,6 +7,7 @@ import (
 	"github.com/shuryak/shuryak-backend/internal/utils"
 	"github.com/shuryak/shuryak-backend/internal/utils/http-result"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
 )
@@ -34,7 +35,14 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := collection.InsertOne(context.TODO(), dto.ToArticle())
+	_, err := collection.InsertOne(context.TODO(), models.Article{
+		Id:          primitive.NewObjectID(),
+		CustomId:    dto.CustomId,
+		Name:        dto.Name,
+		IsDraft:     dto.IsDraft,
+		Thumbnail:   dto.Thumbnail,
+		ArticleData: dto.ArticleData,
+	})
 	if err != nil {
 		http_result.WriteError(&w, models.InternalError, "Internal error")
 		return

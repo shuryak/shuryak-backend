@@ -19,7 +19,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Checking fields length
-	if !dto.CheckFieldsLength() {
+	if !models.CheckRegistrationFieldsLength(&dto) {
 		http_result.WriteError(&w, models.InvalidFieldLength, "Invalid field(s) length")
 		return
 	}
@@ -33,7 +33,15 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := dto.ToUser(false)
+	passwordHash, _ := utils.HashPassword(dto.Password)
+
+	user := models.User{
+		FirstName:    dto.FirstName,
+		LastName:     dto.LastName,
+		Nickname:     dto.Nickname,
+		IsAdmin:      false,
+		PasswordHash: passwordHash,
+	}
 
 	collection = utils.Mongo.Database("shuryakDb").Collection("users")
 

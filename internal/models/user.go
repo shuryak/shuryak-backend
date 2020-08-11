@@ -35,7 +35,7 @@ const (
 	maxPassword  int = 128
 )
 
-func (dto UserRegisterDTO) CheckFieldsLength() bool {
+func CheckRegistrationFieldsLength(dto *UserRegisterDTO) bool {
 	if len(dto.FirstName) < minFirstName || len(dto.FirstName) > maxFirstName {
 		return false
 	}
@@ -53,18 +53,6 @@ func (dto UserRegisterDTO) CheckFieldsLength() bool {
 	}
 
 	return true
-}
-
-func (dto UserRegisterDTO) ToUser(isAdmin bool) *User {
-	passwordHash, _ := utils.HashPassword(dto.Password)
-
-	return &User{
-		dto.FirstName,
-		dto.LastName,
-		dto.Nickname,
-		isAdmin,
-		passwordHash,
-	}
 }
 
 func (user User) GenerateJWTBasedOn(minutes uint) (string, int64, error) {

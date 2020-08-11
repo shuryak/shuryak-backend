@@ -32,14 +32,3 @@ type Article struct {
 	Thumbnail   string             `bson:"thumbnail"`
 	ArticleData interface{}        `bson:"article_data"`
 }
-
-func (dto ArticleDTO) ToArticle() *Article {
-	return &Article{
-		Id:          primitive.NewObjectID(),
-		CustomId:    dto.CustomId,
-		Name:        dto.Name,
-		IsDraft:     dto.IsDraft,
-		Thumbnail:   dto.Thumbnail,
-		ArticleData: dto.ArticleData,
-	}
-}
