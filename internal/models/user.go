@@ -12,6 +12,12 @@ type User struct {
 	PasswordHash string `bson:"password_hash"`
 }
 
+type UserDTO struct {
+	FirstName string `json:"first_name" bson:"first_name"`
+	LastName  string `json:"last_name" bson:"last_name"`
+	Nickname  string `json:"nickname" bson:"nickname"`
+}
+
 type UserRegisterDTO struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`

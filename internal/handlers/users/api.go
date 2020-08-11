@@ -45,13 +45,17 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	collection = utils.Mongo.Database("shuryakDb").Collection("users")
 
-	insertResult, err := collection.InsertOne(context.TODO(), user)
+	_, err := collection.InsertOne(context.TODO(), user)
 	if err != nil {
 		http_result.WriteError(&w, models.InternalError, "Internal error")
 		return
 	}
 
-	json.NewEncoder(w).Encode(insertResult)
+	json.NewEncoder(w).Encode(models.UserDTO{
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Nickname:  user.Nickname,
+	})
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
