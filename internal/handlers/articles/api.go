@@ -29,7 +29,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(dto.Name) < int(models.ArticleNameMinLimit) || len(dto.Name) > int(models.ArticleIdMaxLimit) {
-		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("name length < ", models.ArticleNameMinLimit, " or > ", models.ArticleIdMaxLimit))
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("name length < ", models.ArticleNameMinLimit, " or > ", models.ArticleNameMaxLimit))
 		return
 	}
 

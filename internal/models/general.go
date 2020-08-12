@@ -15,11 +15,21 @@ const (
 )
 
 const (
+	FirstNameMinLimit Limit = 2
+	FirstNameMaxLimit Limit = 32
+	LastNameMinLimit  Limit = 2
+	LastNameMaxLimit  Limit = 32
+	NicknameMinLimit  Limit = 2
+	NicknameMaxLimit  Limit = 16
+	PasswordMinLimit  Limit = 8
+	PasswordMaxLimit  Limit = 256
+
 	ArticleIdMinLimit   Limit = 3
 	ArticleIdMaxLimit   Limit = 24
 	ArticleNameMinLimit Limit = 3
 	ArticleNameMaxLimit Limit = 100
-	FindMaxLimit        Limit = 10
+
+	FindMaxLimit Limit = 10
 )
 
 type ErrorDTO struct {

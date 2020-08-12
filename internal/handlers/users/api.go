@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/shuryak/shuryak-backend/internal/models"
 	"github.com/shuryak/shuryak-backend/internal/utils"
 	"github.com/shuryak/shuryak-backend/internal/utils/http-result"
@@ -17,6 +18,28 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
+
+	// region Validation
+	if len(dto.FirstName) < int(models.FirstNameMinLimit) || len(dto.FirstName) > int(models.FirstNameMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("first_name length < ", models.FirstNameMinLimit, " or > ", models.FirstNameMaxLimit))
+		return
+	}
+
+	if len(dto.LastName) < int(models.FirstNameMinLimit) || len(dto.LastName) > int(models.FirstNameMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("last_name length < ", models.LastNameMinLimit, " or > ", models.LastNameMaxLimit))
+		return
+	}
+
+	if len(dto.Nickname) < int(models.FirstNameMinLimit) || len(dto.Nickname) > int(models.FirstNameMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("nickname length < ", models.NicknameMinLimit, " or > ", models.NicknameMaxLimit))
+		return
+	}
+
+	if len(dto.Password) < int(models.PasswordMinLimit) || len(dto.Password) > int(models.PasswordMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("password length < ", models.PasswordMinLimit, " or > ", models.PasswordMaxLimit))
+		return
+	}
+	// endregion Validation
 
 	// Checking fields length
 	if !models.CheckRegistrationFieldsLength(&dto) {
@@ -65,6 +88,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
 		return
 	}
+
+	// region Validation
+	if len(dto.Nickname) < int(models.FirstNameMinLimit) || len(dto.Nickname) > int(models.FirstNameMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("nickname length < ", models.NicknameMinLimit, " or > ", models.NicknameMaxLimit))
+		return
+	}
+
+	if len(dto.Password) < int(models.PasswordMinLimit) || len(dto.Password) > int(models.PasswordMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("password length < ", models.PasswordMinLimit, " or > ", models.PasswordMaxLimit))
+		return
+	}
+	// endregion Validation
 
 	var dbUser models.User
 	collection := utils.Mongo.Database("shuryakDb").Collection("users")
