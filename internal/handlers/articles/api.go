@@ -3,6 +3,8 @@ package articles
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	v "github.com/asaskevich/govalidator"
 	"github.com/shuryak/shuryak-backend/internal/models"
 	"github.com/shuryak/shuryak-backend/internal/utils"
 	"github.com/shuryak/shuryak-backend/internal/utils/http-result"
@@ -16,9 +18,26 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 	var dto models.ArticleDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "bad JSON structure")
 		return
 	}
+
+	// region Validation
+	if len(dto.CustomId) < int(models.ArticleIdMinLimit) || len(dto.CustomId) > int(models.ArticleIdMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("id length < ", models.ArticleIdMinLimit, " or > ", models.ArticleIdMaxLimit))
+		return
+	}
+
+	if len(dto.Name) < int(models.ArticleNameMinLimit) || len(dto.Name) > int(models.ArticleIdMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("name length < ", models.ArticleNameMinLimit, " or > ", models.ArticleIdMaxLimit))
+		return
+	}
+
+	if v.IsURL(dto.Thumbnail) {
+		http_result.WriteError(&w, models.BadRequest, "invalid thumbnail")
+		return
+	}
+	// endregion Validation
 
 	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
@@ -62,9 +81,16 @@ func FindOneHandler(w http.ResponseWriter, r *http.Request) {
 	var query models.FindOneExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
-		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "bad JSON structure")
 		return
 	}
+
+	// region Validation
+	if query.Query == "" {
+		http_result.WriteError(&w, models.BadRequest, "empty query string")
+		return
+	}
+	// endregion Validation
 
 	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
@@ -89,6 +115,18 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// region Validation
+	if query.Query == "" {
+		http_result.WriteError(&w, models.BadRequest, "empty query string")
+		return
+	}
+
+	if query.Count > uint(models.FindMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("count > ", models.FindMaxLimit))
+		return
+	}
+	// endregion Validation
+
 	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
 	options := options.Find()
@@ -108,7 +146,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 		var document models.MetaArticle
 		err := cur.Decode(&document)
 		if err != nil {
-			http_result.WriteError(&w, models.InternalError, "Internal error")
+			http_result.WriteError(&w, models.InternalError, "internal error")
 			return
 		}
 
@@ -116,7 +154,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		http_result.WriteError(&w, models.InternalError, "Internal error")
+		http_result.WriteError(&w, models.InternalError, "internal error")
 		return
 	}
 
@@ -129,9 +167,16 @@ func GetByCustomIdHandler(w http.ResponseWriter, r *http.Request) {
 	var dto models.ArticleCustomIdDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "bad JSON structure")
 		return
 	}
+
+	// region Validation
+	if len(dto.CustomId) < int(models.ArticleIdMinLimit) || len(dto.CustomId) > int(models.ArticleIdMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("id length < ", models.ArticleIdMinLimit, " or > ", models.ArticleIdMaxLimit))
+		return
+	}
+	// endregion Validation
 
 	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
@@ -149,16 +194,23 @@ func GetByCustomIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetListHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	// w.Header().Set("Access-Control-Allow-Origin", "*")
+	// w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	// w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
 	var query models.GetListExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
-		http_result.WriteError(&w, models.BadRequest, "Bad JSON structure")
+		http_result.WriteError(&w, models.BadRequest, "bad JSON structure")
 		return
 	}
+
+	// region Validation
+	if query.Count > uint(models.FindMaxLimit) {
+		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("count > ", models.FindMaxLimit))
+		return
+	}
+	// endregion Validation
 
 	collection := utils.Mongo.Database("shuryakDb").Collection("articles")
 
@@ -178,7 +230,7 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 		var document models.MetaArticle
 		err := cur.Decode(&document)
 		if err != nil {
-			http_result.WriteError(&w, models.InternalError, "Internal error")
+			http_result.WriteError(&w, models.InternalError, "internal error")
 			return
 		}
 
@@ -186,7 +238,7 @@ func GetListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := cur.Err(); err != nil {
-		http_result.WriteError(&w, models.InternalError, "Internal error")
+		http_result.WriteError(&w, models.InternalError, "internal error")
 		return
 	}
 

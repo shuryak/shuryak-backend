@@ -1,6 +1,7 @@
 package models
 
 type ErrorCode int
+type Limit int
 
 const (
 	BadRequest         ErrorCode = 0 // Bad request (user error)
@@ -11,6 +12,14 @@ const (
 	ExpiredToken       ErrorCode = 5 // Expired token (user error)
 	NotUniqueData      ErrorCode = 6 // Data is not unique when needed (user error)
 	InvalidFieldLength ErrorCode = 7 // Invalid field length (user error)
+)
+
+const (
+	ArticleIdMinLimit   Limit = 3
+	ArticleIdMaxLimit   Limit = 24
+	ArticleNameMinLimit Limit = 3
+	ArticleNameMaxLimit Limit = 100
+	FindMaxLimit        Limit = 10
 )
 
 type ErrorDTO struct {
