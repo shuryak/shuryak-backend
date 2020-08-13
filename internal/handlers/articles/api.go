@@ -24,12 +24,12 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// region Validation
 	if len(dto.CustomId) < int(models.ArticleIdMinLimit) || len(dto.CustomId) > int(models.ArticleIdMaxLimit) {
-		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("id length < ", models.ArticleIdMinLimit, " or > ", models.ArticleIdMaxLimit))
+		http_result.WriteError(&w, models.InvalidFieldLength, fmt.Sprint("id length < ", models.ArticleIdMinLimit, " or > ", models.ArticleIdMaxLimit))
 		return
 	}
 
 	if len(dto.Name) < int(models.ArticleNameMinLimit) || len(dto.Name) > int(models.ArticleIdMaxLimit) {
-		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("name length < ", models.ArticleNameMinLimit, " or > ", models.ArticleNameMaxLimit))
+		http_result.WriteError(&w, models.InvalidFieldLength, fmt.Sprint("name length < ", models.ArticleNameMinLimit, " or > ", models.ArticleNameMaxLimit))
 		return
 	}
 
@@ -87,7 +87,7 @@ func FindOneHandler(w http.ResponseWriter, r *http.Request) {
 
 	// region Validation
 	if query.Query == "" {
-		http_result.WriteError(&w, models.BadRequest, "empty query string")
+		http_result.WriteError(&w, models.InvalidFieldLength, "empty query string")
 		return
 	}
 	// endregion Validation
@@ -117,7 +117,7 @@ func FindManyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// region Validation
 	if query.Query == "" {
-		http_result.WriteError(&w, models.BadRequest, "empty query string")
+		http_result.WriteError(&w, models.InvalidFieldLength, "empty query string")
 		return
 	}
 
@@ -173,7 +173,7 @@ func GetByCustomIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	// region Validation
 	if len(dto.CustomId) < int(models.ArticleIdMinLimit) || len(dto.CustomId) > int(models.ArticleIdMaxLimit) {
-		http_result.WriteError(&w, models.BadRequest, fmt.Sprint("id length < ", models.ArticleIdMinLimit, " or > ", models.ArticleIdMaxLimit))
+		http_result.WriteError(&w, models.InvalidFieldLength, fmt.Sprint("id length < ", models.ArticleIdMinLimit, " or > ", models.ArticleIdMaxLimit))
 		return
 	}
 	// endregion Validation
@@ -194,10 +194,6 @@ func GetByCustomIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetListHandler(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
-	// w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	// w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-
 	var query models.GetListExpression
 
 	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
