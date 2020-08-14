@@ -25,6 +25,7 @@ func handleRequests() http.Handler {
 	router.HandleFunc("/api/articles.getList", articles.GetListHandler)
 	router.HandleFunc("/api/users.register", users.CreateHandler)
 	router.HandleFunc("/api/users.login", users.LoginHandler)
+	router.HandleFunc("/api/users.refreshTokenPair", users.RefreshTokenPairHandler)
 
 	http.Handle("/", router)
 

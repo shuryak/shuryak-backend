@@ -1,9 +1,8 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/shuryak/shuryak-backend/internal/models"
 	"github.com/shuryak/shuryak-backend/internal/utils"
 	"net/http"
@@ -33,24 +32,42 @@ func IsAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.Parse(headerParts[1], func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("there was an error")
-			}
-			return utils.SigningKey, nil
-		})
+		// token, err := jwt.Parse(headerParts[1], func(token *jwt.Token) (interface{}, error) {
+		// 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		// 		return nil, fmt.Errorf("there was an error")
+		// 	}
+		// 	return utils.SigningKey, nil
+		// })
+		//
+		// if err != nil {
+		// 	errorMessage := models.ErrorDTO{
+		// 		ErrorCode: models.InvalidToken,
+		// 		Message:   "Invalid token",
+		// 	}
+		// 	json.NewEncoder(w).Encode(errorMessage)
+		// 	return
+		// }
 
-		if err != nil {
+		if claims, isValid, err := utils.GetClaimsFromToken(headerParts[1]); err != nil {
+			if !isValid {
+				errorMessage := models.ErrorDTO{
+					ErrorCode: models.InvalidToken,
+					Message:   "Invalid token",
+				}
+				json.NewEncoder(w).Encode(errorMessage)
+				return
+			}
+
 			errorMessage := models.ErrorDTO{
 				ErrorCode: models.InvalidToken,
-				Message:   "Invalid token",
+				Message:   err.Error(),
 			}
+
 			json.NewEncoder(w).Encode(errorMessage)
 			return
-		}
-
-		if token.Valid {
-			next.ServeHTTP(w, r)
+		} else {
+			ctx := context.WithValue(context.Background(), models.JwtClaimsKey, claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	}
 }

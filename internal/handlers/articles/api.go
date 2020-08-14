@@ -33,7 +33,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if v.IsURL(dto.Thumbnail) {
+	if !v.IsURL(dto.Thumbnail) {
 		http_result.WriteError(&w, models.BadRequest, "invalid thumbnail")
 		return
 	}

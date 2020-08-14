@@ -2,6 +2,7 @@ package models
 
 type ErrorCode int
 type Limit int
+type CtxKey uint
 
 const (
 	BadRequest         ErrorCode = 0 // Bad request (user error)
@@ -30,6 +31,10 @@ const (
 	ArticleNameMaxLimit Limit = 100
 
 	FindMaxLimit Limit = 10
+)
+
+const (
+	JwtClaimsKey CtxKey = 0
 )
 
 type ErrorDTO struct {

@@ -10,6 +10,7 @@ type User struct {
 	Nickname     string `bson:"nickname"`
 	IsAdmin      bool   `bson:"is_admin"`
 	PasswordHash string `bson:"password_hash"`
+	RefreshToken string `bson:"refresh_token"`
 }
 
 type UserDTO struct {
@@ -61,6 +62,6 @@ func CheckRegistrationFieldsLength(dto *UserRegisterDTO) bool {
 	return true
 }
 
-func (user User) GenerateJWTBasedOn(minutes uint) (string, int64, error) {
-	return utils.GenerateJWT(user.FirstName, user.LastName, user.Nickname, minutes)
+func (user User) GenerateJWTBasedOn(accessMinutes uint, refreshMinutes uint) (map[string]interface{}, error) {
+	return utils.GenerateJWT(user.FirstName, user.LastName, user.Nickname, accessMinutes, refreshMinutes)
 }
