@@ -29,7 +29,7 @@ func handleRequests() http.Handler {
 
 	http.Handle("/", router)
 
-	return cors.Default().Handler(router)
+	return cors.AllowAll().Handler(router)
 }
 
 func main() {

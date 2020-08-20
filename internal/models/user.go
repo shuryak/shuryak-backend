@@ -62,6 +62,6 @@ func CheckRegistrationFieldsLength(dto *UserRegisterDTO) bool {
 	return true
 }
 
-func (user User) GenerateJWTBasedOn(accessMinutes uint, refreshMinutes uint) (map[string]interface{}, error) {
-	return utils.GenerateJWT(user.FirstName, user.LastName, user.Nickname, accessMinutes, refreshMinutes)
+func (user User) GenerateJWTBasedOn(accessMinutes uint) (map[string]interface{}, error) {
+	return utils.GenerateJWT(user.FirstName, user.LastName, user.Nickname, accessMinutes)
 }

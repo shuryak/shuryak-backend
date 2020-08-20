@@ -114,7 +114,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenPair, err := dbUser.GenerateJWTBasedOn(30, 24*60)
+	tokenPair, err := dbUser.GenerateJWTBasedOn(30)
 	if err != nil {
 		http_result.WriteError(&w, models.InternalError, "internal error")
 		return
@@ -123,15 +123,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	update := bson.D{{"$set", bson.D{{"refresh_token", tokenPair["refresh_token"]}}}}
 
 	if _, err := collection.UpdateOne(context.TODO(), findFilter, update); err != nil {
-		http_result.WriteError(&w, models.BadAuth, "internal error wtf")
+		http_result.WriteError(&w, models.BadAuth, "internal error")
 		return
 	}
 
 	json.NewEncoder(w).Encode(models.TokensDTO{
-		AccessToken:      tokenPair["access_token"].(string),
-		RefreshToken:     tokenPair["refresh_token"].(string),
-		AccessExpiresIn:  tokenPair["access_expires_in"].(int64),
-		RefreshExpiresIn: tokenPair["refresh_expires_in"].(int64),
+		AccessToken:     tokenPair["access_token"].(string),
+		RefreshToken:    tokenPair["refresh_token"].(string),
+		AccessExpiresIn: tokenPair["access_expires_in"].(int64),
 	})
 }
 
@@ -174,7 +173,7 @@ func RefreshTokenPairHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tokenPair, err := dbUser.GenerateJWTBasedOn(30, 24*60)
+		tokenPair, err := dbUser.GenerateJWTBasedOn(30)
 		if err != nil {
 			http_result.WriteError(&w, models.InternalError, "internal error")
 			return
@@ -183,15 +182,14 @@ func RefreshTokenPairHandler(w http.ResponseWriter, r *http.Request) {
 		update := bson.D{{"$set", bson.D{{"refresh_token", tokenPair["refresh_token"]}}}}
 
 		if _, err := collection.UpdateOne(context.TODO(), findFilter, update); err != nil {
-			http_result.WriteError(&w, models.BadAuth, "internal error wtf")
+			http_result.WriteError(&w, models.BadAuth, "internal error")
 			return
 		}
 
 		json.NewEncoder(w).Encode(models.TokensDTO{
-			AccessToken:      tokenPair["access_token"].(string),
-			RefreshToken:     tokenPair["refresh_token"].(string),
-			AccessExpiresIn:  tokenPair["access_expires_in"].(int64),
-			RefreshExpiresIn: tokenPair["refresh_expires_in"].(int64),
+			AccessToken:     tokenPair["access_token"].(string),
+			RefreshToken:    tokenPair["refresh_token"].(string),
+			AccessExpiresIn: tokenPair["access_expires_in"].(int64),
 		})
 	}
 }

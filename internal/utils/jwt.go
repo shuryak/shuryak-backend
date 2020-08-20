@@ -8,7 +8,7 @@ import (
 
 var SigningKey = []byte("secret")
 
-func GenerateJWT(firstName string, lastName string, nickname string, accessMinutes uint, refreshMinutes uint) (map[string]interface{}, error) {
+func GenerateJWT(firstName string, lastName string, nickname string, accessMinutes uint) (map[string]interface{}, error) {
 	// region Access Token
 	accessToken := jwt.New(jwt.SigningMethodHS256)
 
@@ -33,10 +33,7 @@ func GenerateJWT(firstName string, lastName string, nickname string, accessMinut
 
 	refreshClaims := refreshToken.Claims.(jwt.MapClaims)
 
-	refreshExpiresIn := time.Minute * time.Duration(refreshMinutes)
-
 	refreshClaims["nickname"] = nickname
-	refreshClaims["exp"] = time.Now().Add(refreshExpiresIn).Unix()
 
 	refreshTokenString, err := refreshToken.SignedString(SigningKey)
 
@@ -46,10 +43,9 @@ func GenerateJWT(firstName string, lastName string, nickname string, accessMinut
 	// endregion Refresh Token
 
 	return map[string]interface{}{
-		"access_token":       accessTokenString,
-		"refresh_token":      refreshTokenString,
-		"access_expires_in":  int64(accessExpiresIn.Seconds()),
-		"refresh_expires_in": int64(refreshExpiresIn.Seconds()),
+		"access_token":      accessTokenString,
+		"refresh_token":     refreshTokenString,
+		"access_expires_in": int64(accessExpiresIn.Seconds()),
 	}, nil
 }
 

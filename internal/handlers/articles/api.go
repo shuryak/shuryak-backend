@@ -28,7 +28,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(dto.Name) < int(models.ArticleNameMinLimit) || len(dto.Name) > int(models.ArticleIdMaxLimit) {
+	if len(dto.Name) < int(models.ArticleNameMinLimit) || len(dto.Name) > int(models.ArticleNameMaxLimit) {
 		http_result.WriteError(&w, models.InvalidFieldLength, fmt.Sprint("name length < ", models.ArticleNameMinLimit, " or > ", models.ArticleNameMaxLimit))
 		return
 	}
@@ -45,12 +45,12 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 	var dbArticle models.User
 	findFilter := bson.D{{"custom_id", dto.CustomId}}
 	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
-		http_result.WriteError(&w, models.NotUniqueData, "Article with this id already exists")
+		http_result.WriteError(&w, models.NotUniqueData, "article with this id already exists")
 		return
 	}
 	findFilter = bson.D{{"name", dto.Name}}
 	if err := collection.FindOne(context.TODO(), findFilter).Decode(&dbArticle); err == nil {
-		http_result.WriteError(&w, models.NotUniqueData, "Article with this name already exists")
+		http_result.WriteError(&w, models.NotUniqueData, "article with this name already exists")
 		return
 	}
 
@@ -63,7 +63,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 		ArticleData: dto.ArticleData,
 	})
 	if err != nil {
-		http_result.WriteError(&w, models.InternalError, "Internal error")
+		http_result.WriteError(&w, models.InternalError, "internal error")
 		return
 	}
 
