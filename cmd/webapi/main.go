@@ -19,12 +19,15 @@ func handleRequests() http.Handler {
 
 	router.Use(middleware.HeadersMiddleware)
 	router.HandleFunc("/api/articles.create", middleware.IsAuthMiddleware(articles.CreateHandler))
+	router.HandleFunc("/api/articles.update", middleware.IsAuthMiddleware(articles.UpdateHandler))
 	router.HandleFunc("/api/articles.findOne", articles.FindOneHandler)
 	router.HandleFunc("/api/articles.findMany", articles.FindManyHandler)
 	router.HandleFunc("/api/articles.getById", articles.GetByCustomIdHandler)
 	router.HandleFunc("/api/articles.getList", articles.GetListHandler)
+	router.HandleFunc("/api/articles.getDraftsList", middleware.IsAuthMiddleware(articles.GetDraftsListHandler))
 	router.HandleFunc("/api/users.register", users.CreateHandler)
 	router.HandleFunc("/api/users.login", users.LoginHandler)
+	router.HandleFunc("/api/users.getUserInfo", middleware.IsAuthMiddleware(users.GetUserInfoHandler))
 	router.HandleFunc("/api/users.refreshTokenPair", users.RefreshTokenPairHandler)
 
 	http.Handle("/", router)

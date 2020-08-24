@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/shuryak/shuryak-backend/internal/models"
 	"github.com/shuryak/shuryak-backend/internal/utils"
 	"github.com/shuryak/shuryak-backend/internal/utils/http-result"
@@ -131,6 +132,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		AccessToken:     tokenPair["access_token"].(string),
 		RefreshToken:    tokenPair["refresh_token"].(string),
 		AccessExpiresIn: tokenPair["access_expires_in"].(int64),
+	})
+}
+
+func GetUserInfoHandler(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(models.UserDTO{
+		Nickname:  r.Context().Value(models.JwtClaimsKey).(jwt.MapClaims)["nickname"].(string),
+		FirstName: r.Context().Value(models.JwtClaimsKey).(jwt.MapClaims)["first_name"].(string),
+		LastName:  r.Context().Value(models.JwtClaimsKey).(jwt.MapClaims)["last_name"].(string),
 	})
 }
 
